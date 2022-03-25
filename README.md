@@ -1,2 +1,0 @@
-# space
-Random space game
