@@ -11,12 +11,15 @@ import os
 
 os.system('color')
 
+
 SECTOR_SIZE = 9
 SUBSECTOR_SIZE = 9
 
 game = True
 
 
+
+clear = lambda: os.system('cls')
 
 
 def typewrite(text,speed=0.030):
@@ -44,32 +47,31 @@ def choice(text,*choices):
         except ValueError:
             print("You can't do this.")
 
-def colorprint(text,c):
-#    match c:
-#        case "HEADER":
-#            print(colors.HEADER + text + colors.END)
-#        case "BLUE":
-#            print(colors.BLUE + text + colors.END)
-#        case "CYAN":
-#            print(colors.CYAN + text + colors.END)
-#        case "GREEN":
-#            print(colors.GREEN + text + colors.END)
-#        case "RED":
-#            print(colors.RED + text + colors.END)
-#        case "FAIL":
-#            print(colors.FAIL + text + colors.END)
-#        case "BOLD":
-#            print(colors.BOLD + text + colors.END)
-#        case "UNDERLINE":
-#            print(colors.UNDERLINE + text + colors.END)
-	pass
+def colorstring(text,c):
+    match c:
+        case "PURPLE":
+            return str(colors.PURPLE + text + colors.END)
+        case "BLUE":
+            return str(colors.BLUE + text + colors.END)
+        case "CYAN":
+            return str(colors.CYAN + text + colors.END)
+        case "GREEN":
+            return str(colors.GREEN + text + colors.END)
+        case "YELLOW":
+            return str(colors.YELLOW + text + colors.END)
+        case "FAIL":
+            return str(colors.FAIL + text + colors.END)
+        case "BOLD":
+            return str(colors.BOLD + text + colors.END)
+        case "UNDERLINE":
+            return str(colors.UNDERLINE + text + colors.END)
 
 class colors:
-    HEADER = '\033[95m'
+    PURPLE = '\033[95m'
     BLUE = '\033[94m'
     CYAN = '\033[96m'
     GREEN = '\033[92m'
-    RED = '\033[93m'
+    YELLOW = '\033[93m'
     FAIL = '\033[91m'
     END = '\033[0m'
     BOLD = '\033[1m'
@@ -138,6 +140,7 @@ class Player:
         self.hp = 60
         self.inv = Inventory("Backpack",40)
         self.spaceship = spaceship
+        self.pos = "Your spaceship"
 
 
 
@@ -217,35 +220,53 @@ class LootGenerator:
 
 
 class Game:
-	def __init__(self):
-		self.MOVE = ["move","go","thrust","to","dir","direction"]
-		self.player = None
+    def __init__(self):
+        self.MOVE = ["move","go","thrust","to","dir","direction"]
+        self.player = None
 
-	def start_game(self):
-		print("< S p a c e  g a m e >")
-		P = Player()
-		S = PilotableSpaceship()
-		P.name,S.name = faststart()
-		S.pilot = P
-		P.spaceship = S
-		self.player = P
-		print("ok")
-		self.main_loop()
+    def print_hud(self):
+        self.center_print(colorstring("< S p a c e  G a m e >","PURPLE"))
+        print(self.lr_justify("Position : ","You are at : "))
+        spsec = ("Sector " + str(X.player.spaceship.pos[0]) + ":" + str(X.player.spaceship.pos[1]))
+        spsub = ("Sub-sector " + str(X.player.spaceship.pos[2]) + ":" + str(X.player.spaceship.pos[3]))
+        print(self.lr_justify(spsec,str(X.player.pos)))
+        print(self.lr_justify(spsub,"????"))
 
-	def main_loop(self):
-		while game:
-			print("You are at : " + str(self.player.spaceship.pos))
-			inp = self.user_input("Action ")
-			self.parse_input(inp)
+    def start_game(self):
+        print("< S p a c e  g a m e >")
+        P = Player()
+        S = PilotableSpaceship()
+        P.name,S.name = faststart()
+        S.pilot = P
+        P.spaceship = S
+        self.player = P
+        P.pos = S.name
+        print("ok")
+        self.main_loop()
 
-	def print_info(self,title,message):
-		return str(title).capitalize() + " >> " + str(message)
+        
+    def main_loop(self):
+        while game:
+            clear()
+            self.print_hud()
+            inp = self.user_input("Action")
+            self.parse_input(inp)
 
-	def user_input(self,message):
-		return input(str(message) + " >>> ").lower()
+    def print_info(self,title,message):
+        return str(title).capitalize() + " >> " + str(message)
 
-	def parse_input(self,inp):
-		cmd = inp.split()
+    def user_input(self,message):
+        return input(str(message) + " >>> ").lower()
+
+    def center_print(self,text):
+        width = os.get_terminal_size().columns
+        print(text.center(width))
+
+    def lr_justify(self,left, right):
+        return '{}{}{}'.format(left, ' ' * (os.get_terminal_size().columns - len(right + left)), right)
+
+    def parse_input(self,inp):
+        cmd = inp.split()
 
 
 
@@ -282,6 +303,17 @@ def faststart():
     name = str(input(""))
     shipname = str(input(""))
     return name,shipname
+print(colorstring("aaa","PURPLE"))
+print(colorstring("aaa","BLUE"))
+print(colorstring("aaa","CYAN"))
+print(colorstring("aaa","GREEN"))
+print(colorstring("aaa","YELLOW"))
+print(colorstring("aaa","FAIL"))
+print(colorstring("aaa","BOLD"))
+print(colorstring("aaa","UNDERLINE"))
+
 
 X = Game()
 X.start_game()
+
+
