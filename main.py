@@ -8,6 +8,13 @@ import random
 import sys
 import time
 import os
+from rich.console import Console
+from rich.layout import Layout
+from rich.theme import Theme
+from rich.panel import Panel
+from rich.align import Align
+from rich.progress import track
+
 
 os.system('color')
 
@@ -17,7 +24,25 @@ SUBSECTOR_SIZE = 9
 
 game = True
 
-
+cosmic = Theme({
+    "main_title" : "bold yellow",
+    "line_title" : "red"    
+})
+console = Console(theme=cosmic)
+layout = Layout()
+layout.split_column(
+    Layout(name="upper"),
+    Layout(name="lower")
+)
+layout["upper"].size = 3
+layout["lower"].split_row(
+    Layout(Panel("Hello",style="line_title")),
+    Layout(Panel("World!"))
+)
+console.print(layout)
+layout["upper"].update(Align.center(Panel("Salut a tous ",style="main_title")))
+console.print(layout)
+console.input("aaaaaa ? >>>")
 
 clear = lambda: os.system('cls')
 
@@ -46,37 +71,6 @@ def choice(text,*choices):
                 print("You can't do this.")
         except ValueError:
             print("You can't do this.")
-
-def colorstring(text,c):
-    match c:
-        case "PURPLE":
-            return str(colors.PURPLE + text + colors.END)
-        case "BLUE":
-            return str(colors.BLUE + text + colors.END)
-        case "CYAN":
-            return str(colors.CYAN + text + colors.END)
-        case "GREEN":
-            return str(colors.GREEN + text + colors.END)
-        case "YELLOW":
-            return str(colors.YELLOW + text + colors.END)
-        case "FAIL":
-            return str(colors.FAIL + text + colors.END)
-        case "BOLD":
-            return str(colors.BOLD + text + colors.END)
-        case "UNDERLINE":
-            return str(colors.UNDERLINE + text + colors.END)
-
-class colors:
-    PURPLE = '\033[95m'
-    BLUE = '\033[94m'
-    CYAN = '\033[96m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    FAIL = '\033[91m'
-    END = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
 
 class Inventory:
     def __init__(self,name,maxInvSize):
@@ -223,9 +217,11 @@ class Game:
     def __init__(self):
         self.MOVE = ["move","go","thrust","to","dir","direction"]
         self.player = None
+        
+
 
     def print_hud(self):
-        self.center_print(colorstring("< S p a c e  G a m e >","PURPLE"))
+        console.print("[bold yellow] S p a c e G a m e [/bold yellow]")
         print(self.lr_justify("Position : ","You are at : "))
         spsec = ("Sector " + str(X.player.spaceship.pos[0]) + ":" + str(X.player.spaceship.pos[1]))
         spsub = ("Sub-sector " + str(X.player.spaceship.pos[2]) + ":" + str(X.player.spaceship.pos[3]))
@@ -272,7 +268,6 @@ class Game:
 
 W = World()
 W.build_world()
-print(W.world)
 print(W.world[5][7][9][3])
 
 def start():
@@ -313,7 +308,7 @@ print(colorstring("aaa","BOLD"))
 print(colorstring("aaa","UNDERLINE"))
 
 
-X = Game()
-X.start_game()
+#X = Game()
+#X.start_game()
 
 
