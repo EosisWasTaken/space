@@ -7,7 +7,9 @@ Created on Wed Mar 23 08:42:45 2022
 import random
 import sys
 import time
+import threading
 import os
+import winsound
 from rich.console import Console
 from rich.layout import Layout
 from rich.theme import Theme
@@ -19,9 +21,11 @@ from rich.progress import track
 os.system('color')
 
 
-SECTOR_SIZE = 9
-SUBSECTOR_SIZE = 9
 
+
+WORLD_SIZE = 10
+global INFOBOX
+INFOBOX = "Infobox"
 game = True
 
 cosmic = Theme({
@@ -37,15 +41,16 @@ layout.split_column(
 layout["upper"].size = 3
 layout["lower"].split_row(
     Layout(Panel("Hello",style="line_title")),
-    Layout(Panel("World!"))
+    Layout(Panel("World!"),name="test")
 )
+layout["lower"]["test"].update(Align.center(Panel("Salut a tous 2",style="main_title")))
 console.print(layout)
 layout["upper"].update(Align.center(Panel("Salut a tous ",style="main_title")))
 console.print(layout)
 console.input("aaaaaa ? >>>")
 
 clear = lambda: os.system('cls')
-
+refresh = lambda: X.refresh()
 
 def typewrite(text,speed=0.030):
     for char in text:
@@ -153,6 +158,7 @@ class PilotableSpaceship:
             "5" : None
         }
         self.pos = [0,0,0,0]
+        self.new_pos = [0,0,0,0]
 
 
     def install_on_slot(self,slot,tech):
@@ -161,20 +167,80 @@ class PilotableSpaceship:
     def uninstall_on_slot(self,slot,tech):
         pass
 
+    def move(self,dir):
+        new_pos = self.pos
+        match dir:
+            case "N":
+                pass
+            case "W":
+                pass
+            case "S":
+                pass
+            case "E":
+                pass
+
+    def warp(self,coords):
+        pass
+
+    def jump(self,coords):
+        print("cur : " + str(self.pos) + " / new : " + str(self.new_pos))
+        time.sleep(5)
+        self.new_pos = [self.pos[0],self.pos[1],coords[0],coords[1]]
+        print("2!!!cur : " + str(self.pos) + " / new : " + str(self.new_pos))
+        time.sleep(5)
+        global INFOBOX
+        INFOBOX = "Jumping to " + str(self.new_pos) + " ..." 
+        x = Task(10,"Jump",self._jump)
+        x.start()
+
+    def _jump(self):
+        print("cur : " + str(self.pos) + " / new : " + str(self.new_pos))
+        time.sleep(5)
+        self.pos = self.new_pos
+        print("cur : " + str(self.pos) + " / new : " + str(self.new_pos))
+        time.sleep(5)
+        global INFOBOX
+        INFOBOX = "Yo you arrived at " + str(self.pos)
+        refresh()
+
+
+    def goto(self,coords):
+        pass
+
+
+class Task:
+    def __init__(self,duration,text,object) -> None:
+        self.duration = duration
+        self.text = text
+        self.object = object
+
+    def start(self):
+        x = threading.Thread(target=self.wait)
+        x.start()
+
+    def wait(self):
+        time.sleep(self.duration)
+        self.object()
+
+
+
 class World:
     def __init__(self):
         self.world = []
+        self.tiles = 0
 
     def build_world(self):
-        for x in range(SECTOR_SIZE+1): # Sector X axis
+        for x in range(WORLD_SIZE): # Sector X axis
             self.world.append([])
-            for y in range(SECTOR_SIZE+1): # Sector Y axis
+            for y in range(WORLD_SIZE): # Sector Y axis
                 #self.world[x].append("Sector " + str(x) + " / " + str(y))
                 self.world[x].append([])
-                for a in range(SUBSECTOR_SIZE+1): # Subsector X axis
+                for a in range(WORLD_SIZE): # Subsector X axis
                     self.world[x][y].append([])
-                    for b in range(SUBSECTOR_SIZE+1): # Subsector Y axis
+                    for b in range(WORLD_SIZE): # Subsector Y axis
                         self.world[x][y][a].append("Sector " + str(x) + " : " + str(y) + " / Subsector " + str(a) + " : " + str(b))
+                        self.tiles += 1
+        return self.tiles
 
 
 class Planet:
@@ -215,7 +281,8 @@ class LootGenerator:
 
 class Game:
     def __init__(self):
-        self.MOVE = ["move","go","thrust","to","dir","direction"]
+        self._MOVE = ["N","W","S","E"]
+        self._POSSIBLE_COORDS = [0,1,2,3,4,5,6,7,8,9]
         self.player = None
         
 
@@ -227,6 +294,7 @@ class Game:
         spsub = ("Sub-sector " + str(X.player.spaceship.pos[2]) + ":" + str(X.player.spaceship.pos[3]))
         print(self.lr_justify(spsec,str(X.player.pos)))
         print(self.lr_justify(spsub,"????"))
+        print(INFOBOX)
 
     def start_game(self):
         print("< S p a c e  g a m e >")
@@ -240,12 +308,20 @@ class Game:
         print("ok")
         self.main_loop()
 
-        
+    def refresh(self):
+        winsound.Beep(50,5)
+        clear()
+        self.print_hud()
+        inp = self.user_input("Action")
+        self.parse_input(inp)
+
+
     def main_loop(self):
         while game:
             clear()
             self.print_hud()
             inp = self.user_input("Action")
+            print("REPL")
             self.parse_input(inp)
 
     def print_info(self,title,message):
@@ -263,12 +339,29 @@ class Game:
 
     def parse_input(self,inp):
         cmd = inp.split()
+        match cmd[0].lower():
+            case "move":
+                if len(cmd) > 1 and str(cmd[1]).upper() in self._MOVE:
+                    self.player.spaceship.move(str(cmd[1]).upper()) # Input NWSE coords ("N")
+                else:
+                    while True:
+                        print("bad")
+            case "jump":
+                if len(cmd) > 2 and int(cmd[1]) in self._POSSIBLE_COORDS and int(cmd[2]) in self._POSSIBLE_COORDS:
+                    self.player.spaceship.jump([int(cmd[1]),int(cmd[2])]) # Input Sub-sectors coords ("2 6")
+                else:
+                    while True:
+                        print("bad")
+            case "warp":
+                print("warp") # Input Sector coords ("2 2")
+            case "goto":
+                print("goto") # Input Sector + Sub-sector coords ("2 2 5 4")
 
 
 
 W = World()
-W.build_world()
-print(W.world[5][7][9][3])
+print(W.build_world())
+print(W.world[0][5][5][0])
 
 def start():
     typewrite("You wake up, feeling half-asleep. \n")
@@ -298,17 +391,9 @@ def faststart():
     name = str(input(""))
     shipname = str(input(""))
     return name,shipname
-print(colorstring("aaa","PURPLE"))
-print(colorstring("aaa","BLUE"))
-print(colorstring("aaa","CYAN"))
-print(colorstring("aaa","GREEN"))
-print(colorstring("aaa","YELLOW"))
-print(colorstring("aaa","FAIL"))
-print(colorstring("aaa","BOLD"))
-print(colorstring("aaa","UNDERLINE"))
 
 
-#X = Game()
-#X.start_game()
+X = Game()
+X.start_game()
 
 
